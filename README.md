@@ -14,7 +14,7 @@ A modern, mobile-friendly single-page app for transparent currency swap fees, bu
 - Calculator for real-time rate and fee conversion
 - Floating Assistant: Conversational AI powered interface that fetches and announces rates/fees/referral info
 - Accessible (prefers-reduced-motion, ARIA, keyboard nav, high contrast)
-- No hardcoded API URLs—configure with `.env` for easy deployment anywhere
+- No hardcoded API URLs configure with `.env` for easy deployment anywhere
 
 ---
 
@@ -170,3 +170,4 @@ MIT — Feel free to use and adapt for your own projects or hackathons!
 - All API endpoints are configured in `.env` for secure, environment-based switching.
 - When endpoints are unreachable, the application falls back to local static JSON so live questions and calculations always work.
 - The AI assistant checks user intent, fetches or reads fallback data, and announces answers via both chat and voice for maximum clarity.
+
