@@ -166,7 +166,7 @@ MIT — Feel free to use and adapt for your own projects or hackathons!
 
 ## How We Integrated the Provided Endpoints
 
-- Our frontend uses the provided API endpoints to fetch live exchange rates and fee breakdowns, parsing and displaying them in real-time and powering our conversational assistant.
+- Our frontend uses the provided API endpoints to fetch live exchange rates and fee breakdowns, parsing and displaying them in real-time—and powering our conversational assistant.
 - All API endpoints are configured in `.env` for secure, environment-based switching.
 - When endpoints are unreachable, the application falls back to local static JSON so live questions and calculations always work.
 - The AI assistant checks user intent, fetches or reads fallback data, and announces answers via both chat and voice for maximum clarity.

@@ -82,7 +82,7 @@ export default function Header(){
 					<ul>
 						<li><a href="#">Home</a></li>
 						<li><a href="#">How It Works</a></li>
-						<li><a className="fees" href="#fees">Fees</a></li>
+						<li><a href="#fees">Fees</a></li>
 						<li><a href="#contact">Contact</a></li>
 					</ul>
 				</nav>

@@ -121,7 +121,11 @@ export default function Calculator(){
 					<div className="calc-row">
 						<div className="calc-field">
 							<label htmlFor="amount">Amount</label>
-							<input id="amount" className="calc-input" type="number" value={amount} min={0} step={0.01} onChange={(e)=>setAmount(parseFloat(e.target.value||'0'))} />
+							<input id="amount" className="calc-input" type="number" value={amount === null ? '' : amount} min={0} step={0.01} onChange={(e)=>{
+							const v = e.target.value;
+							if(v === '' || v === null) setAmount(null);
+							else setAmount(parseFloat(v));
+						}} />
 						</div>
 						<div className="calc-field">
 							<label htmlFor="from">From</label>
