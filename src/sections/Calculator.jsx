@@ -87,14 +87,14 @@ export default function Calculator(){
 					const feeRes = await fetch(FEE_API, { headers: { 'Accept':'application/json' } })
 					if(feeRes.ok){
 						const feeData = await feeRes.json()
-						const parseMoney = (s)=>{
-							if(typeof s !== 'string') return null
-							const num = parseFloat(s.replace(/[^0-9.]/g,'') || '0')
-							return Number.isFinite(num) ? num : null
-						}
+			const parseMoney = (s)=>{
+				if(typeof s !== 'string') return null
+				const num = parseFloat(s.replace(/[^0-9.]/g,'') || '0')
+				return Number.isFinite(num) ? num : null
+			}
 						const usd24 = feeData?.Customer?.Payout?.find(x=>x.Service==='USD Payout - 24hours')?.Fee
 						const ngnFund = feeData?.Customer?.['NG Virtual Bank Account']?.find(x=>x.Service==='NGN Wallet Funding')?.Fee
-						setApiFees({ usdPayout24h: parseMoney(usd24), ngnWalletFunding: parseMoney(ngnFund) })
+			setApiFees({ usdPayout24h: parseMoney(usd24), ngnWalletFunding: parseMoney(ngnFund) })
 					}else{
 						console.warn('Fee API error', feeRes.status)
 					}

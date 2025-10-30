@@ -172,100 +172,26 @@ export default function Fees(){
 				}
 				.fees-live {
 					margin-top: 56px;
-					padding-left: 0;
-					padding-right: 0;
-				}
-				@media (max-width: 1023px) {
-					.fees-live { padding-left: 0; padding-right: 0; }
 				}
 				@media (max-width: 767px) {
 					.fees-live { margin-top: 32px; }
-					.fees-live { padding-left: 4vw; padding-right: 4vw; }
-				}
-				@media (max-width: 520px) {
-					.fees-live { padding-left: 2vw; padding-right: 2vw; }
-				}
-				.fees-switch-wrap {
-					width: 100%;
-					max-width: 100vw;
-				}
-				.fees-switch {
-					min-width: 0;
-					width: 100%;
-					gap: 0;
-				}
-				.fees-switch-btn {
-					flex: 1 1 50%;
-					min-width: 0;
-					padding: 8px 0;
-				}
-				@media (max-width: 530px) {
-					.fees-switch-btn { font-size: 14.5px; }
-				}
-				.fees-live-title {
-					font-size: 2rem;
-					word-break: break-word;
-				}
-				@media (max-width: 500px) {
-					.fees-live-title { font-size: 1.35rem; }
-					.fees-subtitle, .fees-live-subtitle { font-size: 1rem; }
-				}
-				.fees-live-table {
-					width: 100%;
-					border-collapse: collapse;
-					margin-bottom: 16px;
-					background: #fff;
-					display: block;
-					overflow-x: auto;
-					white-space: nowrap;
-					-webkit-overflow-scrolling: touch;
-					max-width: 100vw;
-				}
-				.fee-th, .fee-td {
-					font-size: 15px;
-					min-width: 70px;
-					padding: 8px 12px;
-				}
-				@media (max-width: 530px) {
-					.fee-th, .fee-td { font-size: 13px; padding: 7px 7px; }
-				}
-				.fees-category-card {
-					margin-bottom: 32px;
-					padding: 16px;
-				}
-				@media (max-width: 530px) {
-					.fees-category-card { padding: 6px 2px; margin-bottom: 18px; }
 				}
 				:root[data-theme="dark"] .fees-live {
 					background: #0f172a;
 				}
-				:root[data-theme="dark"] .fees-live-title {
-					color: #e2e8f0;
-				}
-				:root[data-theme="dark"] .fees-live-subtitle {
-					color: #94a3b8;
-				}
-				:root[data-theme="dark"] .fees-switch {
-					background: #152041;
-					border-color: #22315c;
-				}
-				:root[data-theme="dark"] .fees-switch-btn {
-					color: #93c5fd;
+				:root[data-theme="dark"] .fees-live-header {
 					background: transparent;
-				}
-				:root[data-theme="dark"] .fees-switch-btn.active,
-				:root[data-theme="dark"] .fees-switch-btn:focus-visible {
-					background: #FFB806;
-					color: #04396D !important;
-					box-shadow: 0 2px 12px #1e1e1e33;
 				}
 				:root[data-theme="dark"] .fees-category-card {
-					background: #1e293b;
-					border-color: #23304f;
-					box-shadow: 0 2px 8px #202b44aa;
+					background: #1e293b !important;
+					border-color: #22315c !important;
 				}
 				:root[data-theme="dark"] .fees-live-table {
-					background: transparent;
+					background: #1e2332;
+				}
+				:root[data-theme="dark"] .fees-section-title, 
+				:root[data-theme="dark"] .fees-category-title {
+					color: #a0c4e8;
 				}
 				:root[data-theme="dark"] .fee-th {
 					background: #22315c;
@@ -277,10 +203,13 @@ export default function Fees(){
 					border-color: #22315c;
 				}
 				:root[data-theme="dark"] .fee-td-fee {
-					color: #FFB806;
+					color: #FFB806 !important;
 				}
-				:root[data-theme="dark"] .fee-table-empty {
-					color: #93c5fd;
+				:root[data-theme="dark"] .fees-live-title {
+					color: #e2e8f0;
+				}
+				:root[data-theme="dark"] .fees-live-subtitle {
+					color: #94a3b8;
 				}
 			`}</style>
 			<div className="fees-container">
@@ -354,7 +283,7 @@ export default function Fees(){
 				<div className="fees-live reveal">
 					<header className="fees-live-header">
 						<h2 className="fees-live-title">Current Service & Transaction Fees</h2>
-						<p className="fees-live-subtitle">See up-to-date service and transaction fees for your swaps. All values are refreshed live from our servers.</p>
+						<p className="fees-live-subtitle">Fetched live from our fee service. Last updated on page load.</p>
 						<div className="fees-switch-wrap">
 							<div className="fees-switch" role="tablist" aria-label="Fee Group Tabs">
 								<button

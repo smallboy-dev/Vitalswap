@@ -8,17 +8,40 @@ export default function FloatingAssistant(){
     const [messages, setMessages] = useState(()=>[
         { role:'assistant', text: "Hi! I'm your VitalSwap AI Assistant. Ask me about fees, rates, or referrals." }
     ])
+    const [feeModeAsk, setFeeModeAsk] = useState(null) 
 
     const chatRef = useRef(null)
     const recRef = useRef(null)
 
-    // Colors / brand
     const brand = useMemo(()=>({ blue:'#04396D', yellow:'#FFB806' }),[])
 
-	// External APIs (env-driven with fallback)
-	const FEE_API = (import.meta?.env?.VITE_FEE_API) || 'https://2kbbumlxz3.execute-api.us-east-1.amazonaws.com/default/fee'
+	// External APIs (env-driven)
+	const FEE_API = import.meta?.env?.VITE_FEE_API
+	const EXCHANGE_API = import.meta?.env?.VITE_EXCHANGE_API
 
-    // Scroll chat to bottom when messages change
+    // Fetch live rates from exchange API
+    const fetchLiveRates = useCallback(async () => {
+      console.log('EXCHANGE_API:', EXCHANGE_API); // Log the API
+      if (!EXCHANGE_API) {
+        console.log('EXCHANGE_API env variable not set');
+        return null;
+      }
+      try {
+        const [usdNgn, ngnUsd] = await Promise.all([
+          fetch(`${EXCHANGE_API}?from=USD&to=NGN`).then(r=>r.ok?r.json():Promise.reject(r)),
+          fetch(`${EXCHANGE_API}?from=NGN&to=USD`).then(r=>r.ok?r.json():Promise.reject(r)),
+        ]);
+        console.log('Live API rates responses:', { usdNgn, ngnUsd });
+        return {
+          USD_NGN: usdNgn.rate,
+          NGN_USD: ngnUsd.rate
+        };
+      } catch (e) {
+        console.log('Live rates fetch error:', e);
+        return null;
+      }
+    }, [EXCHANGE_API]);
+
     useEffect(()=>{
         const el = chatRef.current
         if(el) el.scrollTop = el.scrollHeight
@@ -33,7 +56,7 @@ export default function FloatingAssistant(){
             utter.pitch = 1
             window.speechSynthesis.cancel() // stop any ongoing speech
             window.speechSynthesis.speak(utter)
-        }catch(_e){ /* no-op */ }
+        }catch(_e){  }
     },[])
 
 	// Fetch fees from external API
@@ -48,20 +71,6 @@ export default function FloatingAssistant(){
 		}
 	},[FEE_API])
 
-	// Handle mock API call for rates (placeholder until rates endpoint is provided)
-    const fetchMockRate = useCallback(async ()=>{
-        // Simulate endpoint; replace with real API if available
-        // const endpoint = `${import.meta.env.VITE_API_BASE_URL ?? ''}/rates` // example
-        // const res = await fetch(endpoint)
-        // const data = await res.json()
-        // return data
-        return new Promise((resolve)=>{
-            setTimeout(()=>{
-                resolve({ base:'USD', quote:'NGN', unitRate:1415, example:{ usd:100, ngn:141500 } })
-            }, 500)
-        })
-    },[])
-
     const addAssistantMessage = useCallback((text)=>{
         setMessages(prev=>[...prev, { role:'assistant', text }])
         speak(text)
@@ -75,42 +84,73 @@ export default function FloatingAssistant(){
 
         // Very simple intent matching
         const lower = text.toLowerCase()
-		if(lower.includes('rate') || lower.includes('dollar') || lower.includes('naira') || lower.includes('fx')){
-            const rate = await fetchMockRate()
-            const reply = `As of now, $1 equals ₦${rate.unitRate.toLocaleString()}. Swapping $${rate.example.usd} gives ₦${rate.example.ngn.toLocaleString()}.`
-            addAssistantMessage(reply)
-            return
+        if(lower.includes('fee') || (feeModeAsk==='awaiting' && /(customer|business)/.test(lower))) {
+            let fees=null;
+            try{
+                fees = await fetchFees();
+            }catch(_e){fees=null;}
+            if(!fees){
+                try{
+                    const res = await fetch('/assets/fees-fallback.json');
+                    if(res.ok) fees = await res.json();
+                }catch(_e){fees=null;}
+            }
+            if(!fees){
+                addAssistantMessage("Sorry, fee details are currently unavailable.");
+                return;
+            }
+            const isCustomer = lower.includes('customer');
+            const isBusiness = lower.includes('business');
+            let group=null;
+            if(isCustomer || (feeModeAsk==="awaiting" && /(customer)/.test(lower))) group='Customer';
+            if(isBusiness || (feeModeAsk==="awaiting" && /(business|company)/.test(lower))) group='Business';
+            if(!group) {
+                setFeeModeAsk('awaiting');
+                addAssistantMessage('Do you want Customer or Business fees?');
+                return;
+            }
+            const groupObj = fees[group];
+            if(!groupObj){
+                addAssistantMessage(`No ${group} fee data found.`);
+                setFeeModeAsk(null);
+                return;
+            }
+            let reply = `${group} fees:\n`;
+            Object.entries(groupObj).forEach(([category, arr])=>{
+                reply += `\n${category}:\n`;
+                (arr||[]).forEach(item=>{
+                    reply += `- ${item.Service}: ${item.Fee}\n`;
+                });
+            });
+            addAssistantMessage(reply.trim());
+            speak(reply.trim());
+            setFeeModeAsk(null);
+            return;
         }
-		if(lower.includes('fee')){
-			const fees = await fetchFees()
-			if(fees){
-				try{
-					const c = fees.Customer || {}
-					const b = fees.Business || {}
-					const pick = (arr, name)=> Array.isArray(arr) && arr.length>0 ? `${name}: ${arr[0].Service} — ${arr[0].Fee}` : null
-					const samples = [
-						pick(c['US Virtual Bank Account'], 'US Account'),
-						pick(c['NG Virtual Bank Account'], 'NGN Wallet'),
-						pick(c['Payout'], 'Payout'),
-						pick(c['Freedom Virtual Card'], 'Card'),
-						pick(c['FX'], 'FX'),
-					].filter(Boolean)
-					const summary = samples.slice(0,3).join(' | ')
-					addAssistantMessage(`${summary}. Full fee table: https://2kbbumlxz3.execute-api.us-east-1.amazonaws.com/default/fee`)
-					return
-				}catch(_e){
-					// fall through to simple message
-				}
-			}
-			addAssistantMessage('Here are our common fees: US wire deposit $15, NGN wallet funding ₦200, USD payout (24h) $10. Full fee table: https://2kbbumlxz3.execute-api.us-east-1.amazonaws.com/default/fee')
-            return
+        if(lower.includes('rate') || lower.includes('dollar') || lower.includes('naira') || lower.includes('fx')){
+            let rates = await fetchLiveRates();
+            if(!rates) {
+                try {
+                    const res = await fetch('/assets/rates-fallback.json');
+                    if(res.ok) rates = await res.json();
+                }catch(_e){rates=null;}
+            }
+            if(rates && rates.USD_NGN && rates.NGN_USD){
+                const reply = `Current rates:\n$1 = ₦${rates.USD_NGN.toLocaleString()}\n₦1 = $${rates.NGN_USD.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+                addAssistantMessage(reply);
+                speak(reply);
+            } else {
+                addAssistantMessage("Sorry, I couldn't fetch the latest rates at the moment. Please try again later.");
+            }
+            return;
         }
         if(lower.includes('referral') || lower.includes('refer') || lower.includes('invite')){
-            addAssistantMessage('You can invite friends using your referral link and earn rewards on successful swaps.')
-            return
+            const reply = 'To refer someone, copy your swap tag or referral link and share it with your friends. When your friend signs up with your link and completes a swap, you both get rewarded.';
+            addAssistantMessage(reply); speak(reply);
+            return;
         }
-        addAssistantMessage("I can help with FX rates, fees, and referrals. Try asking: 'What’s the current dollar to naira rate?'")
-    },[input, addAssistantMessage, fetchMockRate])
+        addAssistantMessage("I can help with FX rates, fees, and referrals. Try asking: 'What’s the current dollar to naira rate?'");
+    },[input, addAssistantMessage, fetchLiveRates, fetchFees, feeModeAsk])
 
     // Speech Recognition (if available)
     useEffect(()=>{

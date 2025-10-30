@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useRef } from 'react'
 
 export default function Header(){
     const [isDark,setIsDark] = useState(()=>{
@@ -8,6 +9,9 @@ export default function Header(){
         }
         return false
     })
+
+    const [headerHide, setHeaderHide] = useState(false)
+    const lastScrollY = useRef(window.scrollY)
 
     useEffect(()=>{
         const el = document.documentElement
@@ -21,15 +25,41 @@ export default function Header(){
 	const [scrolled, setScrolled] = useState(false)
 
 	useEffect(() => {
-		const handleScroll = () => {
-			setScrolled(window.scrollY > 10)
+        let ticking = false
+        function handleScroll() {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const curr = window.scrollY
+                    setScrolled(curr > 10)
+                    const goingDown = curr > lastScrollY.current
+                    if(curr < 60) setHeaderHide(false)
+                    else if(goingDown && curr > 64) setHeaderHide(true)
+                    else if(curr < lastScrollY.current) setHeaderHide(false)
+                    lastScrollY.current = curr
+                    ticking = false
+                })
+                ticking = true
+            }
 		}
 		window.addEventListener('scroll', handleScroll)
 		return () => window.removeEventListener('scroll', handleScroll)
 	}, [])
 
 	return (
-		<header className={`site-header ${scrolled ? 'scrolled' : ''}`}>
+		<>
+        <style>{`
+            .site-header.header-hide {
+                transform: translateY(-82px);
+                opacity: 0;
+                box-shadow: none !important;
+                pointer-events: none;
+                transition: transform .38s cubic-bezier(.17,.88,.36,1.21), opacity .42s ease, box-shadow .2s;
+            }
+            .site-header {
+                transition: transform .38s cubic-bezier(.17,.88,.36,1.21), opacity .42s, box-shadow .18s;
+            }
+        `}</style>
+		<header className={`site-header${scrolled?' scrolled':''}${headerHide?' header-hide':''}`}>
 			<div className="container">
 				<div className="left">
 					<a href="/" aria-label="Home">
@@ -116,5 +146,6 @@ export default function Header(){
 				</div>
 			)}
 		</header>
+		</>
 	)
 }
