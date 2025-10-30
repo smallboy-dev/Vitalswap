@@ -1353,3 +1353,60 @@ footer.site-footer {
 :root[data-theme="light"] .cta-title { color: #FFFFFF }
 :root[data-theme="light"] .cta-subtitle { color: #DBEAFE }
 :root[data-theme="light"] .cta-button { background: #FFB806; color: #04396D }
+
+/* === Animation Utilities === */
+@keyframes fadeUpIn {
+  from { opacity: 0; transform: translateY(32px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fadeLeftIn {
+  from { opacity: 0; transform: translateX(-32px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fadeRightIn {
+  from { opacity: 0; transform: translateX(32px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fadeDownIn {
+  from { opacity: 0; transform: translateY(-32px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.animate-in {
+  opacity: 0;
+  animation: fadeUpIn 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.animate-in-left {
+  opacity: 0;
+  animation: fadeLeftIn 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.animate-in-right {
+  opacity: 0;
+  animation: fadeRightIn 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.animate-in-down {
+  opacity: 0;
+  animation: fadeDownIn 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
+}
+.animate-in.stagger-1 { animation-delay: .08s; }
+.animate-in.stagger-2 { animation-delay: .20s; }
+.animate-in.stagger-3 { animation-delay: .33s; }
+.animate-in.stagger-4 { animation-delay: .46s; }
+.animate-in.stagger-5 { animation-delay: .57s; }
+
+/* Group utility to stagger child reveals */
+.stagger > * {
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in,
+  .animate-in-left,
+  .animate-in-right,
+  .animate-in-down {
+    opacity: 1 !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+/* === End global animation utilities === */

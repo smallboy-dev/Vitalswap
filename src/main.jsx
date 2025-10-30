@@ -18,30 +18,48 @@ const initTheme = ()=>{
 
 initTheme()
 
-const initReveal = ()=>{
-  try{
-    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const items = Array.from(document.querySelectorAll('.reveal'))
-    if(items.length === 0) return
-    const io = new IntersectionObserver((entries)=>{
-      entries.forEach((entry)=>{
-        if(entry.isIntersecting){
-          const el = entry.target
-          el.classList.add('in')
-          io.unobserve(el)
-        }
-      })
-    },{ rootMargin: '0px 0px -10% 0px', threshold: 0.12 })
-    items.forEach((el,idx)=>{
-      el.style.transitionDelay = `${Math.min(idx*60, 300)}ms`
-      io.observe(el)
+// Animation reveal helper
+function animateRevealAll() {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const animateRows = [
+    ...document.querySelectorAll('.hero, .fees-header, .fees-live, .calc, .rates, .referrals, .footer-top'),
+    ...document.querySelectorAll('.fee-card, .fees-category-card, .calc-card, .rate-item, .ref-card'),
+  ];
+  let delayStep = 0;
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((entries, obs)=>{
+    entries.forEach((entry,i) => {
+      if(entry.isIntersecting) {
+        entry.target.classList.add('animate-in');
+        entry.target.classList.add('stagger-'+((delayStep%5)+1));
+        obs.unobserve(entry.target);
+        delayStep++;
+      }
     })
-  }catch(_e){
-    // no-op
-  }
+  }, { threshold: 0.14, rootMargin: '0px 0px -10% 0px'}) : null;
+  animateRows.forEach((el, i) => {
+    if(io) io.observe(el);
+    else {
+      el.classList.add('animate-in');
+    }
+  });
 }
 
-window.requestAnimationFrame(()=> initReveal())
+window.requestAnimationFrame(()=>{
+  animateRevealAll();
+});
+
+// Safety net: ensure reveal content becomes visible even if IO/timing fails
+setTimeout(()=>{
+  try{
+    const items = Array.from(document.querySelectorAll('.reveal'))
+    if(items.length){
+      const anyIn = items.some(el=> el.classList.contains('in'))
+      if(!anyIn){
+        items.forEach(el=> el.classList.add('in'))
+      }
+    }
+  }catch(_e){ /* no-op */ }
+}, 1200)
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>

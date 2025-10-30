@@ -7,6 +7,7 @@ export default function Calculator(){
 	const [feeLoading, setFeeLoading] = useState(false)
 	const [feeError, setFeeError] = useState(null)
 	const [apiFees, setApiFees] = useState({ usdPayout24h: null, ngnWalletFunding: null })
+    const [liveRate, setLiveRate] = useState(null)
 	const processingFeeUSD = 2
 	const swapFeeRate = 0.005 // 0.5%
 	const rates = {
@@ -18,7 +19,7 @@ export default function Calculator(){
 
 	const { netTo, swapFee, procFee, rate } = useMemo(()=>{
 		const key = `${from}_${to}`
-		const r = rates[key] ?? 0
+		const r = (liveRate && Number.isFinite(liveRate) ? liveRate : (rates[key] ?? 0))
 		const sFee = amount * swapFeeRate
 		// Use API-driven processing fees when available
 		const usdFee = (apiFees.usdPayout24h ?? processingFeeUSD)
@@ -28,7 +29,7 @@ export default function Calculator(){
 		const totalFeesTo = (sFee + pFee) * r
 		const nTo = Math.max(0, gross - totalFeesTo)
 		return { netTo: nTo, swapFee: sFee, procFee: pFee, rate: r }
-	}, [amount, from, to, apiFees])
+	}, [amount, from, to, apiFees, liveRate])
 
 	const resultRefs = useRef([])
 	
@@ -55,20 +56,55 @@ export default function Calculator(){
 		setFeeLoading(true)
 		setFeeError(null)
 		try{
-			const res = await fetch('')/*Api*/
-			if(!res.ok) throw new Error(`HTTP ${res.status}`)
-			const data = await res.json()
-			// Parse fees
-			const parseMoney = (s)=>{
-				if(typeof s !== 'string') return null
-				const num = parseFloat(s.replace(/[^0-9.]/g,'') || '0')
-				return Number.isFinite(num) ? num : null
+			const EXCHANGE_API = import.meta.env.VITE_EXCHANGE_API
+			const FEE_API = import.meta.env.VITE_FEE_API
+			if(!EXCHANGE_API){
+				setFeeError('The calculator is temporarily unavailable due to a server configuration issue. Please try again later or contact support.')
+				setFeeLoading(false)
+				return
 			}
-			const usd24 = data?.Customer?.Payout?.find(x=>x.Service==='USD Payout - 24hours')?.Fee
-			const ngnFund = data?.Customer?.['NG Virtual Bank Account']?.find(x=>x.Service==='NGN Wallet Funding')?.Fee
-			setApiFees({ usdPayout24h: parseMoney(usd24), ngnWalletFunding: parseMoney(ngnFund) })
+			const rateUrl = `${EXCHANGE_API}?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`
+			try{
+				const rateRes = await fetch(rateUrl, { headers: { 'Accept':'application/json' } })
+				if(!rateRes.ok){
+					throw new Error(`Exchange API error ${rateRes.status} (${rateUrl})`)
+				}
+				const rateData = await rateRes.json()
+				if(typeof rateData?.rate === 'number'){
+					setLiveRate(rateData.rate)
+				}else{
+					throw new Error(`Invalid exchange rate response (${rateUrl})`)
+				}
+			}catch(rateErr){
+				console.error(rateErr)
+				setFeeError(typeof rateErr?.message === 'string' ? rateErr.message : 'Failed to fetch exchange rate.')
+				return
+			}
+
+			// Fees are optional for calculation; failures shouldn't block the demo
+			if(FEE_API){
+				try{
+					const feeRes = await fetch(FEE_API, { headers: { 'Accept':'application/json' } })
+					if(feeRes.ok){
+						const feeData = await feeRes.json()
+						const parseMoney = (s)=>{
+							if(typeof s !== 'string') return null
+							const num = parseFloat(s.replace(/[^0-9.]/g,'') || '0')
+							return Number.isFinite(num) ? num : null
+						}
+						const usd24 = feeData?.Customer?.Payout?.find(x=>x.Service==='USD Payout - 24hours')?.Fee
+						const ngnFund = feeData?.Customer?.['NG Virtual Bank Account']?.find(x=>x.Service==='NGN Wallet Funding')?.Fee
+						setApiFees({ usdPayout24h: parseMoney(usd24), ngnWalletFunding: parseMoney(ngnFund) })
+					}else{
+						console.warn('Fee API error', feeRes.status)
+					}
+				}catch(feeErr){
+					console.warn('Fee API fetch failed:', feeErr)
+				}
+			}
 		}catch(err){
-			setFeeError('Failed to fetch latest fees. Please try again.')
+			console.error(err)
+			setFeeError('Unexpected error. Please try again.')
 		}finally{
 			setFeeLoading(false)
 		}

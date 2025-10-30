@@ -7,6 +7,7 @@ import Referrals from './sections/Referrals.jsx'
 import Rates from './sections/Rates.jsx'
 import Cta from './sections/Cta.jsx'
 import Footer from './components/Footer.jsx'
+import FloatingAssistant from './components/FloatingAssistant.jsx'
 
 export default function App(){
   return (
@@ -19,6 +20,7 @@ export default function App(){
       <Rates />
       <Cta />
       <Footer />
+      <FloatingAssistant />
     </>
   )
 }
