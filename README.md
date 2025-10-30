@@ -20,11 +20,11 @@ A lightweight, production-ready single-page site built with React 18 and Vite 5.
 ## Demo Quick Guide
 
 - **Page Animations:**
-  - Scroll down—the hero, fee cards, calculator, rates, and other major blocks will gracefully fade/slide into view. Animations run only once as each element enters the viewport.
+  - Scroll down the hero, fee cards, calculator, rates, and other major blocks will gracefully fade/slide into view. Animations run only once as each element enters the viewport.
   - If your OS/browser prefers reduced motion, all effects are automatically disabled for accessibility.
 
 - **Dark Mode:**
-  - Click the theme toggle in the header. the entire UI—including Fee breakdowns, tables, cards, and the Floating Assistant—adapts backgrounds, borders, and text for a beautiful night mode.
+  - Click the theme toggle in the header. the entire UI—including Fee breakdowns, tables, cards, and the Floating Assistant adapts backgrounds, borders, and text for a beautiful night mode.
 
 - **Floating Assistant:**
   - Tap the bottom-right AI button to reveal the chat. Try on your phone or mobile emulator; the chat panel and controls scale and reflow for all mobile sizes.
@@ -166,3 +166,4 @@ export default defineConfig({
 ## License
 
 MIT — Feel free to use and adapt for your own projects.
+
