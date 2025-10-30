@@ -8,13 +8,26 @@ A lightweight, production-ready single-page site built with React 18 and Vite 5.
 - Sticky header with scroll shadow and mobile navigation drawer
 - Theme toggle with auto dark mode and manual override
 - Professional motion system
-  - Scroll-reveal animations via IntersectionObserver
-  - Smooth hover/focus transitions across buttons, links, cards, and inputs
+  - **Global reveal and fade animations**: All major sections, cards, and blocks animate in with IntersectionObserver and staggered fade/slide transitions.
   - Animated calculator result values
-  - Respects prefers-reduced-motion
-- Sections: Hero, Fees, Calculator, Referrals, Rates, CTA, Footer
-- Basic live rates poller scaffold (update endpoints as needed)
+  - Respects prefers-reduced-motion for accessibility
+- **Sections:** Hero, Fees, Calculator, Referrals, Rates, CTA, Footer
+- **Floating Assistant:** Mobile-friendly floating AI/chat assistant with responsive pop panel and dark mode support
+- Live fee/rates tables with switch tabs (Customer/Business)
+- All endpoints are environment-driven (no hardcoded API URLs), easily configured for hackathons or production
 - Graceful asset fallbacks and error handling for images
+
+## Demo Quick Guide
+
+- **Page Animations:**
+  - Scroll down—the hero, fee cards, calculator, rates, and other major blocks will gracefully fade/slide into view. Animations run only once as each element enters the viewport.
+  - If your OS/browser prefers reduced motion, all effects are automatically disabled for accessibility.
+
+- **Dark Mode:**
+  - Click the theme toggle in the header. the entire UI—including Fee breakdowns, tables, cards, and the Floating Assistant—adapts backgrounds, borders, and text for a beautiful night mode.
+
+- **Floating Assistant:**
+  - Tap the bottom-right AI button to reveal the chat. Try on your phone or mobile emulator; the chat panel and controls scale and reflow for all mobile sizes.
 
 ## Tech Stack
 
@@ -69,64 +82,54 @@ root/
     components/
       Header.jsx         # Sticky header, theme toggle, mobile menu
       Footer.jsx         # Footer with links and social icons
+      FloatingAssistant.jsx # Responsive floating AI/chat assistant
     sections/
       Hero.jsx           # Intro section with illustration
-      Fees.jsx           # Fee breakdown cards
+      Fees.jsx           # Fee breakdown cards + live fee tables
       Calculator.jsx     # Fee calculator with animated results
       Referrals.jsx      # Referral cards and copy action
       Rates.jsx          # Live rates card with manual refresh
       Cta.jsx            # Call-to-action band
     App.jsx              # Page composition
-    main.jsx             # App bootstrap, theme init, reveal init
-    styles.css           # Global styles, transitions, themes
+    main.jsx             # App bootstrap, theme init, reveal init, motion
+    styles.css           # Global styles, transitions, reveal utilities, themes
   vite.config.js         # Vite configuration
   package.json
 ```
 
-## Transitions and Motion
+## Animations, Transitions, and Motion
 
-- Scroll reveal: elements with class `reveal` fade/slide in when entering viewport. Initialized in `src/main.jsx`.
-- Buttons, inputs, cards: consistent easing and hover/focus states.
-- Calculator results: values pulse slightly on change (`.result-animate`).
-- Reduced motion: all non-essential animations are disabled when users prefer reduced motion.
+- **Scroll reveal:** Elements with `reveal` and `animate-in` classes fade-in/slide as they enter viewport, using IntersectionObserver and staggered delays.
+- **Utilities:** Use `.animate-in`, `.animate-in-left`, `.animate-in-right`, etc. for explicit animations in your HTML/JS.
+- **Buttons, inputs, cards:** Consistent easing and hover/focus states.
+- **Calculator results:** Values pulse slightly on change (`.result-animate`).
+- **Reduced motion:** All non-essential animations disabled when users prefer reduced motion.
 
 ## Theming
 
 - Auto-detects system theme on first load.
 - Users can toggle theme via the header button; choice is stored in `localStorage` and applied to `document.documentElement` as `data-theme` (`light` or `dark`).
-- Many styles adapt between light/dark using `[data-theme]` selectors.
+- All main sections—including live fee tabs, tables, cards, and Floating Assistant—adapt their backgrounds, borders, text, and highlight colors for dark mode.
 
 ## API Integration
 
-This project ships with placeholders where you can wire in your real APIs.
+**Environment variables are used for all endpoints** (preferred for hackathons & production).
 
-- Rates endpoint placeholder in `src/sections/Rates.jsx`:
-  - Update `endpoint` inside `fetchRate` or switch to an environment variable (see below).
-- Calculator fees placeholder in `src/sections/Calculator.jsx`:
-  - Update the `fetch('')/*Api*/` call in `handleCalculate` with your endpoint and adapt the parsing logic to your response shape.
-
-### Using environment variables (recommended)
-
-Vite exposes env vars prefixed with `VITE_` as `import.meta.env`. Create a `.env` (or `.env.local`) at the project root, for example:
+- Set VITE_FEE_API and VITE_EXCHANGE_API (and other endpoints as needed) in your `.env` file:
 
 ```env
-VITE_API_BASE_URL=https://api.example.com
+VITE_FEE_API=https://your-api.com/fee
+VITE_EXCHANGE_API=https://your-api.com/exchange
 ```
 
-Then in code:
-
-```js
-const endpoint = `${import.meta.env.VITE_API_BASE_URL}/rates`;
-```
-
-Remember to rebuild after changing environment variables.
+- Reference them in code as `import.meta.env.VITE_FEE_API` etc. No API is hardcoded anywhere—just update your .env and restart the dev server.
 
 ## Accessibility
 
 - Honors `prefers-reduced-motion` to limit animations
 - Sufficient color contrast in both light and dark themes
 - Focus styles on interactive controls
-- Semantic markup and ARIA labels where appropriate
+- Semantic markup, ARIA labels, and keyboard navigation in complex widgets
 
 ## Deployment
 
@@ -156,8 +159,9 @@ export default defineConfig({
 ## Customization Tips
 
 - Colors, radii, and sizing variables are centralized at the top of `styles.css` under `:root`.
-- Add/remove `reveal` classes to control which elements animate on scroll.
+- Add/remove `reveal` or `animate-in` classes to control which elements animate on scroll.
 - Tweak easing and durations in `styles.css` (`cubic-bezier` curves used for a premium feel).
+- FloatingAssistant.jsx can be positioned, themed, or extended easily from within `src/components`.
 
 ## License
 
