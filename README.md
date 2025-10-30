@@ -1,39 +1,30 @@
 # VitalSwap – Transparent FX Fees (React + Vite)
 
-A lightweight, production-ready single-page site built with React 18 and Vite 5. It showcases transparent currency swap fees with a polished, professional UI, smooth page transitions, and dark mode support.
+A modern, mobile-friendly single-page app for transparent currency swap fees, built with React 18 and Vite 5. Features animated page sections, live exchange rates and fee fetching, dark mode, a responsive floating AI assistant, and robust error/fallback handling.
+
+---
 
 ## Features
 
-- Responsive, modern layout with semantic HTML
-- Sticky header with scroll shadow and mobile navigation drawer
-- Theme toggle with auto dark mode and manual override
-- Professional motion system
-  - **Global reveal and fade animations**: All major sections, cards, and blocks animate in with IntersectionObserver and staggered fade/slide transitions.
-  - Animated calculator result values
-  - Respects prefers-reduced-motion for accessibility
-- **Sections:** Hero, Fees, Calculator, Referrals, Rates, CTA, Footer
-- **Floating Assistant:** Mobile-friendly floating AI/chat assistant with responsive pop panel and dark mode support
-- Live fee/rates tables with switch tabs (Customer/Business)
-- All endpoints are environment-driven (no hardcoded API URLs), easily configured for hackathons or production
-- Graceful asset fallbacks and error handling for images
+- Fully responsive, professional design
+- Animated page sections and cards (IntersectionObserver, CSS transitions)
+- Sticky, animated header with theme toggle and dark mode support
+- Live exchange rates and fee breakdowns, using external API endpoints (with offline/backup fallbacks)
+- Categorized, toggleable fee tables (Customer / Business)
+- Calculator for real-time rate and fee conversion
+- Floating Assistant: Conversational AI powered interface that fetches and announces rates/fees/referral info
+- Accessible (prefers-reduced-motion, ARIA, keyboard nav, high contrast)
+- No hardcoded API URLs—configure with `.env` for easy deployment anywhere
 
-## Demo Quick Guide
+---
 
-- **Page Animations:**
-  - Scroll down—the hero, fee cards, calculator, rates, and other major blocks will gracefully fade/slide into view. Animations run only once as each element enters the viewport.
-  - If your OS/browser prefers reduced motion, all effects are automatically disabled for accessibility.
+## Demo Overview
 
-- **Dark Mode:**
-  - Click the theme toggle in the header. the entire UI—including Fee breakdowns, tables, cards, and the Floating Assistant—adapts backgrounds, borders, and text for a beautiful night mode.
+- **Animations:** All main sections, cards, and results animate in as you scroll.
+- **Dark Mode:** Click the theme toggle in the header. The UI, fees, and chat adapt for night.
+- **Floating Assistant:** Tap the bottom-right AI icon for smart, voiced support on any device.
 
-- **Floating Assistant:**
-  - Tap the bottom-right AI button to reveal the chat. Try on your phone or mobile emulator; the chat panel and controls scale and reflow for all mobile sizes.
-
-## Tech Stack
-
-- React 18
-- Vite 5 (dev server and build)
-- Vanilla CSS (no external UI framework)
+---
 
 ## Getting Started
 
@@ -50,119 +41,132 @@ npm install
 
 ### Development
 
-Start the local dev server (with HMR):
-
 ```bash
 npm run dev
 ```
+Visit the Local URL printed by Vite (typically `http://localhost:5173`).
 
-Vite will print a local URL (typically `http://localhost:5173`).
-
-### Build
-
-Create an optimized production build in `dist/`:
+### Building for Production
 
 ```bash
 npm run build
 ```
 
-Preview the production build locally:
+Preview the production build:
 
 ```bash
 npm run preview
 ```
 
-## Project Structure
+---
 
-```text
-root/
-  assets/                # Source assets (fonts, images)
-  public/                # Static assets served as-is
-  src/
-    components/
-      Header.jsx         # Sticky header, theme toggle, mobile menu
-      Footer.jsx         # Footer with links and social icons
-      FloatingAssistant.jsx # Responsive floating AI/chat assistant
-    sections/
-      Hero.jsx           # Intro section with illustration
-      Fees.jsx           # Fee breakdown cards + live fee tables
-      Calculator.jsx     # Fee calculator with animated results
-      Referrals.jsx      # Referral cards and copy action
-      Rates.jsx          # Live rates card with manual refresh
-      Cta.jsx            # Call-to-action band
-    App.jsx              # Page composition
-    main.jsx             # App bootstrap, theme init, reveal init, motion
-    styles.css           # Global styles, transitions, reveal utilities, themes
-  vite.config.js         # Vite configuration
-  package.json
-```
+## Environment Setup
 
-## Animations, Transitions, and Motion
-
-- **Scroll reveal:** Elements with `reveal` and `animate-in` classes fade-in/slide as they enter viewport, using IntersectionObserver and staggered delays.
-- **Utilities:** Use `.animate-in`, `.animate-in-left`, `.animate-in-right`, etc. for explicit animations in your HTML/JS.
-- **Buttons, inputs, cards:** Consistent easing and hover/focus states.
-- **Calculator results:** Values pulse slightly on change (`.result-animate`).
-- **Reduced motion:** All non-essential animations disabled when users prefer reduced motion.
-
-## Theming
-
-- Auto-detects system theme on first load.
-- Users can toggle theme via the header button; choice is stored in `localStorage` and applied to `document.documentElement` as `data-theme` (`light` or `dark`).
-- All main sections—including live fee tabs, tables, cards, and Floating Assistant—adapt their backgrounds, borders, text, and highlight colors for dark mode.
-
-## API Integration
-
-**Environment variables are used for all endpoints** (preferred for hackathons & production).
-
-- Set VITE_FEE_API and VITE_EXCHANGE_API (and other endpoints as needed) in your `.env` file:
+All API endpoints are configured in your `.env` at the project root:
 
 ```env
 VITE_FEE_API=https://your-api.com/fee
 VITE_EXCHANGE_API=https://your-api.com/exchange
 ```
 
-- Reference them in code as `import.meta.env.VITE_FEE_API` etc. No API is hardcoded anywhere—just update your .env and restart the dev server.
+After changing `.env`, always restart the dev server.
+
+---
+
+## Static Fallbacks
+
+If an API is unreachable, the app automatically falls back to local JSON files:
+
+- `public/assets/fees-fallback.json` — For fee breakdowns (example provided)
+- `public/assets/rates-fallback.json` — For exchange rates
+
+These ensure demo/offline resilience and enable mock/test data.
+
+---
+
+## Project Structure
+
+```text
+root/
+  public/
+    assets/
+      fees-fallback.json     # Fallback data for fees
+      rates-fallback.json    # Fallback data for rates
+  src/
+    components/
+      Header.jsx             # Sticky header, theme, and nav drawer
+      Footer.jsx             # Footer links and icons
+      FloatingAssistant.jsx  # Responsive floating chat with voice
+    sections/
+      Hero.jsx               # Hero illustration
+      Fees.jsx               # Main fee breakdown + tables
+      Calculator.jsx         # Live calculator
+      Referrals.jsx          # Referral/Invite info and actions
+      Rates.jsx              # Live rate card
+      Cta.jsx                # Call-to-action/Join prompt
+    App.jsx                  # Assembles all sections
+    main.jsx                 # App entry, bootstrap, theme/init
+    styles.css               # Global/tokens/themes/animations
+  vite.config.js
+  .env
+  package.json
+```
+
+---
+
+## API Integration
+
+- All live data pulls are environment driven so that endpoints can be swapped for staging, hackathon, or production without code changes.
+- Fees and rates are fetched in real-time, parsed, and displayed in both UI cards and the AI chat.
+- If an endpoint is down/misconfigured, local fallback JSON is used for a seamless experience.
+
+**Conversational Handler (AI Assistant):**
+- Answers `fee`, `rate`, and `referral` questions, detects user intent, fetches info, prompts for Customer/Business type if unclear, and reads answers aloud using browser speech API.
+- Fallback logic allows uninterrupted demo even if endpoints fail.
+
+---
+
+## Animations and Motion
+
+- Reveal on scroll for major cards/blocks (IntersectionObserver)
+- Fade/slide-in, pulse effects for calculator results
+- All animations disabled if `prefers-reduced-motion` is set
+
+---
+
+## Theming
+
+- Auto detects system theme on load
+- One-click toggle for dark/light mode (stores selection)
+- Fully themed sections, including floating Assistant and tables
+
+---
 
 ## Accessibility
 
-- Honors `prefers-reduced-motion` to limit animations
-- Sufficient color contrast in both light and dark themes
-- Focus styles on interactive controls
-- Semantic markup, ARIA labels, and keyboard navigation in complex widgets
+- Respects user motion preferences
+- Keyboard navigation and focus indicators throughout
+- Semantic ARIA labels for all major controls
+- High contrast and color accessibility for all modes
+
+---
 
 ## Deployment
 
-This is a purely static site once built; you can deploy the `dist/` folder to any static hosting provider:
+- After `npm run build`, deploy the contents of `dist/` to any static host (Netlify, Vercel, CF Pages, S3, etc.).
+- If deploying under a subdirectory, configure `base` in `vite.config.js`.
 
-- GitHub Pages, Netlify, Vercel, Cloudflare Pages, S3 + CloudFront, etc.
-
-If deploying under a sub-path (e.g., `https://example.com/vitalswap/`), set `base` in `vite.config.js`:
-
-```js
-export default defineConfig({
-  base: '/vitalswap/',
-});
-```
-
-## Assets & Fonts
-
-- Custom Gilroy fonts are included under `assets/fonts/` and loaded via `@font-face` in `styles.css`.
-- Images and placeholders live in `assets/` and `public/assets/`. Components include `onError` fallbacks for robustness.
-
-## Scripts
-
-- `npm run dev` – start dev server
-- `npm run build` – production build to `dist/`
-- `npm run preview` – preview `dist/` locally
-
-## Customization Tips
-
-- Colors, radii, and sizing variables are centralized at the top of `styles.css` under `:root`.
-- Add/remove `reveal` or `animate-in` classes to control which elements animate on scroll.
-- Tweak easing and durations in `styles.css` (`cubic-bezier` curves used for a premium feel).
-- FloatingAssistant.jsx can be positioned, themed, or extended easily from within `src/components`.
+---
 
 ## License
 
-MIT — Feel free to use and adapt for your own projects.
+MIT — Feel free to use and adapt for your own projects or hackathons!
+
+---
+
+## How We Integrated the Provided Endpoints
+
+- Our frontend uses the provided API endpoints to fetch live exchange rates and fee breakdowns, parsing and displaying them in real-time and powering our conversational assistant.
+- All API endpoints are configured in `.env` for secure, environment-based switching.
+- When endpoints are unreachable, the application falls back to local static JSON so live questions and calculations always work.
+- The AI assistant checks user intent, fetches or reads fallback data, and announces answers via both chat and voice for maximum clarity.
