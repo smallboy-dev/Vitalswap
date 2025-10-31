@@ -9,6 +9,7 @@ export default function FloatingAssistant(){
         { role:'assistant', text: "Hi! I'm your VitalSwap AI Assistant. Ask me about fees, rates, or referrals." }
     ])
     const [feeModeAsk, setFeeModeAsk] = useState(null) 
+    const [recent, setRecent] = useState(()=>{ try{ return JSON.parse(localStorage.getItem('fa_recent_queries')||'[]') }catch(_e){ return [] } })
 
     const chatRef = useRef(null)
     const recRef = useRef(null)
@@ -18,6 +19,18 @@ export default function FloatingAssistant(){
 	// External APIs (env-driven)
 	const FEE_API = import.meta?.env?.VITE_FEE_API
 	const EXCHANGE_API = import.meta?.env?.VITE_EXCHANGE_API
+
+    // helper: manage recent queries
+    const pushRecent = useCallback((q)=>{
+        const v = (q||'').trim()
+        if(!v) return
+        setRecent(prev=>{
+            const dedup = [v, ...prev.filter(x=> x.toLowerCase() !== v.toLowerCase())]
+            const clipped = dedup.slice(0,6)
+            try{ localStorage.setItem('fa_recent_queries', JSON.stringify(clipped)) }catch(_e){}
+            return clipped
+        })
+    },[])
 
     // Fetch live rates from exchange API
     const fetchLiveRates = useCallback(async () => {
@@ -48,16 +61,34 @@ export default function FloatingAssistant(){
     },[messages, open])
 
     // Text-to-Speech for assistant replies
-    const speak = useCallback((text)=>{
+    const speak = useCallback((text, langCode=null) => {
         try{
             if(!('speechSynthesis' in window)) return
-            const utter = new SpeechSynthesisUtterance(text)
+            const utter = new window.SpeechSynthesisUtterance(text)
             utter.rate = 1
             utter.pitch = 1
-            window.speechSynthesis.cancel() // stop any ongoing speech
-            window.speechSynthesis.speak(utter)
+            // Try to pick a voice for the detected language
+            let preferredLang = langCode ? langCode : null;
+            if(!preferredLang) {
+                const ltext = text.toLowerCase();
+                if(ltext.includes('yoruba')) preferredLang = 'yo';
+                else if(ltext.includes('igbo')) preferredLang = 'ig';
+                else if(ltext.includes('hausa')) preferredLang = 'ha';
+                else if(ltext.includes('pidgin')) preferredLang = 'en-NG'; // Nigerian English
+                else preferredLang = undefined; // fallback
+            }
+            const voices = window.speechSynthesis.getVoices();
+            // Try matching voice by language
+            if(preferredLang){
+                let found = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith(preferredLang));
+                // Nigerian English often en-NG, fallback to en if no perfect match
+                if(!found && preferredLang==='en-NG') found = voices.find(v=>v.lang && v.lang.toLowerCase().startsWith('en'));
+                if(found) utter.voice = found;
+            }
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utter);
         }catch(_e){  }
-    },[])
+    },[]);
 
 	// Fetch fees from external API
 	const fetchFees = useCallback(async ()=>{
@@ -81,6 +112,9 @@ export default function FloatingAssistant(){
         if(!text) return
         setMessages(prev=>[...prev, { role:'user', text }])
         setInput('')
+        pushRecent(text)
+
+        const lang = detectLang(text);
 
         // Very simple intent matching
         const lower = text.toLowerCase()
@@ -105,8 +139,9 @@ export default function FloatingAssistant(){
             if(isCustomer || (feeModeAsk==="awaiting" && /(customer)/.test(lower))) group='Customer';
             if(isBusiness || (feeModeAsk==="awaiting" && /(business|company)/.test(lower))) group='Business';
             if(!group) {
+                addAssistantMessage(TG.feePrompt[lang] || TG.feePrompt.english);
+                speak(TG.feePrompt[lang] || TG.feePrompt.english);
                 setFeeModeAsk('awaiting');
-                addAssistantMessage('Do you want Customer or Business fees?');
                 return;
             }
             const groupObj = fees[group];
@@ -115,13 +150,49 @@ export default function FloatingAssistant(){
                 setFeeModeAsk(null);
                 return;
             }
-            let reply = `${group} fees:\n`;
-            Object.entries(groupObj).forEach(([category, arr])=>{
+            // Translate/paraphrase dynamic fee lines
+            let reply = '';
+            if(lang==='pidgin') {
+              reply = `${group} fees:\n`;
+              Object.entries(groupObj).forEach(([category, arr])=>{
                 reply += `\n${category}:\n`;
                 (arr||[]).forEach(item=>{
-                    reply += `- ${item.Service}: ${item.Fee}\n`;
+                  reply += `- ${item.Service}: ${item.Fee}\n`;
                 });
-            });
+              });
+            } else if(lang==='yoruba') {
+              reply = `${group} owo iṣẹ́:\n`;
+              Object.entries(groupObj).forEach(([category, arr])=>{
+                reply += `\n${category}:\n`;
+                (arr||[]).forEach(item=>{
+                  reply += `- ${item.Service}: ${item.Fee}\n`;
+                });
+              });
+            } else if(lang==='igbo') {
+              reply = `${group} ụgwọ:\n`;
+              Object.entries(groupObj).forEach(([category, arr])=>{
+                reply += `\n${category}:\n`;
+                (arr||[]).forEach(item=>{
+                  reply += `- ${item.Service}: ${item.Fee}\n`;
+                });
+              });
+            } else if(lang==='hausa') {
+              reply = `${group} kudade:\n`;
+              Object.entries(groupObj).forEach(([category, arr])=>{
+                reply += `\n${category}:\n`;
+                (arr||[]).forEach(item=>{
+                  reply += `- ${item.Service}: ${item.Fee}\n`;
+                });
+              });
+            } else {
+              reply = `${group} fees:\n`;
+              Object.entries(groupObj).forEach(([category, arr])=>{
+                reply += `\n${category}:\n`;
+                (arr||[]).forEach(item=>{
+                  reply += `- ${item.Service}: ${item.Fee}\n`;
+                });
+              });
+            }
             addAssistantMessage(reply.trim());
             speak(reply.trim());
             setFeeModeAsk(null);
@@ -136,7 +207,13 @@ export default function FloatingAssistant(){
                 }catch(_e){rates=null;}
             }
             if(rates && rates.USD_NGN && rates.NGN_USD){
-                const reply = `Current rates:\n$1 = ₦${rates.USD_NGN.toLocaleString()}\n₦1 = $${rates.NGN_USD.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
+                // Template
+                let reply = '';
+                if(lang==='pidgin') reply = `Dollar to Naira now na ₦${rates.USD_NGN}. Naira to Dollar na $${rates.NGN_USD}.`;
+                else if(lang==='yoruba') reply = `Dọla kan to Naira jẹ́ ₦${rates.USD_NGN}, Naira kan to Dollar jẹ́ $${rates.NGN_USD}.`;
+                else if(lang==='igbo') reply = `Dọla 1 ka Naira bụ ₦${rates.USD_NGN}, Naira 1 bụ $${rates.NGN_USD}.`;
+                else if(lang==='hausa') reply = `Dala 1 yanzu ya kai ₦${rates.USD_NGN}, Naira 1 ya kai $${rates.NGN_USD}.`;
+                else reply = `Current rates:\n$1 = ₦${rates.USD_NGN.toLocaleString()}\n₦1 = $${rates.NGN_USD.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`;
                 addAssistantMessage(reply);
                 speak(reply);
             } else {
@@ -145,12 +222,13 @@ export default function FloatingAssistant(){
             return;
         }
         if(lower.includes('referral') || lower.includes('refer') || lower.includes('invite')){
-            const reply = 'To refer someone, copy your swap tag or referral link and share it with your friends. When your friend signs up with your link and completes a swap, you both get rewarded.';
+            const reply = TG.referral[lang] || TG.referral.english;
             addAssistantMessage(reply); speak(reply);
             return;
         }
-        addAssistantMessage("I can help with FX rates, fees, and referrals. Try asking: 'What’s the current dollar to naira rate?'");
-    },[input, addAssistantMessage, fetchLiveRates, fetchFees, feeModeAsk])
+        addAssistantMessage(TG.fallback[lang] || TG.fallback.english);
+        speak(TG.fallback[lang] || TG.fallback.english);
+    },[input, addAssistantMessage, fetchLiveRates, fetchFees, feeModeAsk, pushRecent])
 
     // Speech Recognition (if available)
     useEffect(()=>{
@@ -225,6 +303,12 @@ export default function FloatingAssistant(){
         close: {
             width:32, height:32, borderRadius:8, border:'none', cursor:'pointer',
             background:'rgba(255,255,255,0.12)', color:'#fff'
+        },
+        recentWrap: {
+            display:'flex', gap:8, flexWrap:'wrap', padding:'8px 12px', background:'#0b274a', color:'#DBEAFE', borderTop:'1px solid rgba(255,255,255,0.12)'
+        },
+        chip: {
+            padding:'6px 10px', borderRadius:9999, background:'rgba(255,255,255,0.12)', color:'#fff', cursor:'pointer', border:'1px solid rgba(255,255,255,0.15)', fontSize:12
         },
         chat: {
             height:320, overflow:'auto', padding:12, background:'linear-gradient(180deg, #ffffff, #eef2f7)'
@@ -349,6 +433,39 @@ export default function FloatingAssistant(){
     )
 
     return portalTarget ? createPortal(ui, portalTarget) : null
+}
+
+const LANGS = ['english', 'pidgin', 'yoruba', 'igbo', 'hausa'];
+function detectLang(s) {
+  const l = s.toLowerCase();
+  if(l.includes('pidgin')) return 'pidgin';
+  if(l.includes('yoruba')) return 'yoruba';
+  if(l.includes('igbo')) return 'igbo';
+  if(l.includes('hausa')) return 'hausa';
+  return 'english';
+}
+const TG = {
+  feePrompt: {
+    english: 'Do you want Customer or Business fees?',
+    pidgin: 'You wan see Customer fee or Business fee?',
+    yoruba: 'Ṣé o fẹ́ rí owó iṣẹ́ oníbàárà tàbí ti ilé-iṣẹ́?',
+    igbo: 'Ị chọrọ ịhụ ụgwọ ndị ahịa ma ọ bụ nke azụmahịa?',
+    hausa: 'Kana son ganin kudin Abokin ciniki ko na kasuwanci?'
+  },
+  referral: {
+    english: 'To refer someone, copy your swap tag or referral link and share it with your friends. When your friend signs up with your link and completes a swap, you both get rewarded.',
+    pidgin: 'To refer person, just copy your swap tag or referral link share am give your padi. If dem use am register and swap, both of una go get reward.',
+    yoruba: 'Lati fi ẹnikan ṣàlàyé, daakọ swap tag rẹ tàbí ìjápọ ìtọ́ka, pín in fún ọ̀rẹ́ rẹ. Tí ọ̀rẹ́ rẹ bá forúkọ sílẹ̀ tí ó sì ṣe paṣipaarọ̀, ẹ̀yin méjèèjì ní yóò gba ẹ̀bùn.',
+    igbo: 'Ị chọrọ ịkpọ mmadụ, detuo swap tag gị ma ọ bụ njikọ ntụpụta, kee ya nye enyi gị. Mgbe enyi gị debanyere aha jiri ya mee swap, unu abụọ ga-enweta onyinye.',
+    hausa: 'Don gayyatar mutum, kwafe swap tag ɗinka ko hanyar gayyata ka aika wa abokinka. Idan abokinka ya shiga da hanyar kuma yayi swap, ku duka zaku sami lada.'
+  },
+  fallback: {
+    english: "I can help with FX rates, fees, and referrals. Try asking: 'What’s the current dollar to naira rate?'",
+    pidgin: "I fit help with dollar rate, fee, or referral. Try ask: 'How much dollar dey?‘",
+    yoruba: "Mo lè ràn ẹ́ lọ́wọ́ pẹ̀lú owó paṣipaarọ̀, àwọn owó iṣẹ́, tàbí ìtọ́ka. Béèrè bí owó ṣe ń lọ.",
+    igbo: "M nwere ike inyere gị aka na ego mgbanwe, ụgwọ, na ntụpụta. Jụọ mụ: 'Kedu dollar na Naira ugbu a?‘",
+    hausa: "Zan iya taimaka maka da farashin musaya, kudade, da gayyata. Tambayi; 'Yaya dala ke yanzu?'"
+  }
 }
 
 

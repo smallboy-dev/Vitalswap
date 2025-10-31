@@ -12,6 +12,7 @@ export default function Header(){
 
     const [headerHide, setHeaderHide] = useState(false)
     const lastScrollY = useRef(window.scrollY)
+    const [notif, setNotif] = useState(0)
 
     useEffect(()=>{
         const el = document.documentElement
@@ -19,7 +20,9 @@ export default function Header(){
             setIsDark(el.getAttribute('data-theme') === 'dark')
         })
         obs.observe(el,{ attributes:true, attributeFilter:['data-theme'] })
-        return ()=> obs.disconnect()
+        const onUpdated = ()=> setNotif(1)
+        window.addEventListener('rates-updated', onUpdated)
+        return ()=> { obs.disconnect(); window.removeEventListener('rates-updated', onUpdated) }
     },[])
 	const [mobileOpen,setMobileOpen] = useState(false)
 	const [scrolled, setScrolled] = useState(false)
@@ -44,6 +47,14 @@ export default function Header(){
 		window.addEventListener('scroll', handleScroll)
 		return () => window.removeEventListener('scroll', handleScroll)
 	}, [])
+
+    const onBell = ()=>{
+        try{
+            const el = document.getElementById('live-rates')
+            if(el){ el.scrollIntoView({ behavior:'smooth', block:'start' }) }
+            setNotif(0)
+        }catch(_e){}
+    }
 
 	return (
 		<>
@@ -87,6 +98,19 @@ export default function Header(){
 					</ul>
 				</nav>
 				<div style={{display:'flex',gap:12,alignItems:'center'}}>
+                    <button
+                        type="button"
+                        aria-label="Notifications"
+                        onClick={onBell}
+                        style={{position:'relative', background:'transparent', border:'1px solid rgba(0,0,0,0.1)', color:'#04396D', width:36, height:36, borderRadius:6, display:'inline-flex', alignItems:'center', justifyContent:'center', cursor:'pointer'}}
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6v-3a6 6 0 1 0-12 0v3l-2 2v1h16v-1l-2-2Z" stroke="currentColor" strokeWidth="2"/>
+                        </svg>
+                        {notif>0 && (
+                            <span style={{position:'absolute', top:-6, right:-6, minWidth:16, height:16, padding:'0 4px', borderRadius:9999, background:'#FFB806', color:'#04396D', fontWeight:700, fontSize:11, display:'inline-flex', alignItems:'center', justifyContent:'center', border:'2px solid #fff'}}>{notif}</span>
+                        )}
+                    </button>
 					<button
 						className="mobile-toggle"
 						type="button"
@@ -102,16 +126,16 @@ export default function Header(){
 						className="theme-toggle"
 						type="button"
 						aria-label="Toggle theme"
-	onClick={()=>{
-		const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
-		if(isDark){
-			document.documentElement.setAttribute('data-theme','light')
-			localStorage.setItem('theme','light')
-		}else{
-			document.documentElement.setAttribute('data-theme','dark')
-			localStorage.setItem('theme','dark')
-		}
-	}}
+						onClick={()=>{
+							const isDark = document.documentElement.getAttribute('data-theme') === 'dark'
+							if(isDark){
+								document.documentElement.setAttribute('data-theme','light')
+								localStorage.setItem('theme','light')
+							}else{
+								document.documentElement.setAttribute('data-theme','dark')
+								localStorage.setItem('theme','dark')
+							}
+						}}
 					>
 						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 							<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="currentColor" strokeWidth="2"/>

@@ -7,7 +7,10 @@ import Referrals from './sections/Referrals.jsx'
 import Rates from './sections/Rates.jsx'
 import Cta from './sections/Cta.jsx'
 import Footer from './components/Footer.jsx'
+import RateChart from './sections/RateChart.jsx'
 import FloatingAssistant from './components/FloatingAssistant.jsx'
+import Onboarding from './components/Onboarding.jsx'
+import TipBubble from './components/TipBubble.jsx'
 
 export default function App(){
   return (
@@ -18,9 +21,12 @@ export default function App(){
       <Calculator />
       <Referrals />
       <Rates />
+      <RateChart />
       <Cta />
       <Footer />
       <FloatingAssistant />
+      <Onboarding />
+      <TipBubble />
     </>
   )
 }
