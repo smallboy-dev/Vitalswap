@@ -5,6 +5,7 @@ export default function TipBubble(){
   const [idx,setIdx] = useState(0)
   const timerRef = useRef(null)
   const autoHideRef = useRef(null)
+  const waitRef = useRef(null)
 
   const tips = useMemo(()=>[
     'Did you know VitalSwap has one of the lowest fees in Africa?',
@@ -14,13 +15,64 @@ export default function TipBubble(){
     'Calculator uses live rates — try it with your amount.'
   ],[])
 
-  useEffect(()=>{
-    // show once per session after a short delay
+  const canShowByFrequency = ()=>{
     try{
-      if(sessionStorage.getItem('tips_hidden')==='1') return
+      const now = Date.now()
+      const last = parseInt(localStorage.getItem('tips_last_shown')||'0',10)
+      const COOLDOWN_MS = 10 * 60 * 1000 // 10 minutes
+      if(now - last < COOLDOWN_MS) return false
+      const today = new Date().toISOString().slice(0,10)
+      const dayKey = localStorage.getItem('tips_day_key')
+      const dayCount = parseInt(localStorage.getItem('tips_day_count')||'0',10)
+      if(dayKey === today){
+        if(dayCount >= 3) return false
+      }
+      return true
+    }catch(_e){ return true }
+  }
+
+  const markShown = ()=>{
+    try{
+      const today = new Date().toISOString().slice(0,10)
+      const dayKey = localStorage.getItem('tips_day_key')
+      let count = parseInt(localStorage.getItem('tips_day_count')||'0',10)
+      if(dayKey !== today){
+        localStorage.setItem('tips_day_key', today)
+        count = 0
+      }
+      localStorage.setItem('tips_day_count', String(count+1))
+      localStorage.setItem('tips_last_shown', String(Date.now()))
     }catch(_e){}
-    const t = setTimeout(()=> setOpen(true), 2200)
-    return ()=> clearTimeout(t)
+  }
+
+  useEffect(()=>{
+    // show once per session and only occasionally, after onboarding completes
+    try{ if(sessionStorage.getItem('tips_hidden')==='1') return }catch(_e){}
+
+    const start = ()=>{
+      const t = setTimeout(()=>{
+        if(canShowByFrequency()){
+          setOpen(true)
+          markShown()
+        }
+      }, 1200)
+      waitRef.current = t
+    }
+
+    try{
+      const done = localStorage.getItem('onboarding_done')
+      if(done){ start() }
+      else {
+        const id = setInterval(()=>{
+          try{
+            if(localStorage.getItem('onboarding_done')){ clearInterval(id); start() }
+          }catch(_e){}
+        }, 500)
+        waitRef.current = id
+      }
+    }catch(_e){ start() }
+
+    return ()=>{ if(waitRef.current) clearTimeout(waitRef.current); try{ clearInterval(waitRef.current) }catch(_e){} }
   },[])
 
   const clearAutoHide = ()=>{ if(autoHideRef.current) clearTimeout(autoHideRef.current); autoHideRef.current = null }
@@ -28,7 +80,7 @@ export default function TipBubble(){
     clearAutoHide()
     const vw = typeof window!=='undefined' ? window.innerWidth : 1024
     const isSmall = vw < 520
-    const delay = isSmall ? 10000 : 14000 // 10s on mobile, 14s desktop
+    const delay = isSmall ? 10000 : 14000
     autoHideRef.current = setTimeout(()=> hide(), delay)
   }
 
