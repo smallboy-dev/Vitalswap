@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 
-export default function Fees(){
+export default function Fees() {
 	const [data, setData] = useState(null)
 	const [loading, setLoading] = useState(true)
 	const [error, setError] = useState('')
@@ -8,39 +8,39 @@ export default function Fees(){
 
 	const FEE_API = import.meta.env.VITE_FEE_API
 
-	useEffect(()=>{
+	useEffect(() => {
 		let cancelled = false
-		;(async()=>{
-			try{
-				setLoading(true)
-				const res = await fetch(FEE_API, { headers: { 'Accept':'application/json' } })
-				if(!res.ok) throw new Error('Failed to fetch fees')
-				const json = await res.json()
-				if(!cancelled){
-					setData(json)
-					setError('')
+			; (async () => {
+				try {
+					setLoading(true)
+					const res = await fetch(FEE_API, { headers: { 'Accept': 'application/json' } })
+					if (!res.ok) throw new Error('Failed to fetch fees')
+					const json = await res.json()
+					if (!cancelled) {
+						setData(json)
+						setError('')
+					}
+				} catch (e) {
+					if (!cancelled) {
+						setError('Unable to load latest fees. Please try again later.')
+					}
+				} finally {
+					if (!cancelled) setLoading(false)
 				}
-			}catch(e){
-				if(!cancelled){
-					setError('Unable to load latest fees. Please try again later.')
-				}
-			}finally{
-				if(!cancelled) setLoading(false)
-			}
-		})()
-		return ()=>{ cancelled = true }
-	},[])
+			})()
+		return () => { cancelled = true }
+	}, [])
 
-	const customerCategories = useMemo(()=>{
+	const customerCategories = useMemo(() => {
 		return data?.Customer ? Object.entries(data.Customer) : []
-	},[data])
+	}, [data])
 
-	const businessCategories = useMemo(()=>{
+	const businessCategories = useMemo(() => {
 		return data?.Business ? Object.entries(data.Business) : []
-	},[data])
+	}, [data])
 
-	const Table = ({ items })=>{
-		if(!Array.isArray(items) || items.length === 0) return (
+	const Table = ({ items }) => {
+		if (!Array.isArray(items) || items.length === 0) return (
 			<div className="fee-table-empty">No entries.</div>
 		)
 		return (
@@ -54,7 +54,7 @@ export default function Fees(){
 						</tr>
 					</thead>
 					<tbody>
-						{items.map((row, idx)=> (
+						{items.map((row, idx) => (
 							<tr key={idx} className="fee-tr">
 								<td className="fee-td">{row.Service}</td>
 								<td className="fee-td fee-td-fee">{row.Fee}</td>
@@ -221,16 +221,16 @@ export default function Fees(){
 					<article className="fee-card fee-card--primary reveal">
 						<header className="fee-card-header">
 							<span className="fee-card-icon" aria-hidden="true">
-								<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<circle cx="15" cy="15" r="12" fill="#FFB806"/>
-									<path d="M10 12h8l-2.5-2.5" stroke="#04396D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-									<path d="M20 18h-8l2.5 2.5" stroke="#04396D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+								<svg width="28" height="21" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<circle cx="15" cy="15" r="12" fill="#FFB806" />
+									<path d="M10 12h8l-2.5-2.5" stroke="#04396D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+									<path d="M20 18h-8l2.5 2.5" stroke="#04396D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 								</svg>
 							</span>
 							<span className="fee-chip fee-chip--amber">0.5%</span>
 						</header>
 						<h3 className="fee-card-title fee-card-title--light">Swap Fee</h3>
-						<p className="fee-card-desc fee-card-desc--light">Low competitive rate for currency<br/>conversion</p>
+						<p className="fee-card-desc fee-card-desc--light">Low competitive rate for currency<br />conversion</p>
 						<ul className="fee-list">
 							<li className="fee-list-item fee-list-item--light">Transparent pricing</li>
 							<li className="fee-list-item fee-list-item--light">No hidden charges</li>
@@ -242,16 +242,15 @@ export default function Fees(){
 					<article className="fee-card reveal">
 						<header className="fee-card-header">
 							<span className="fee-card-icon" aria-hidden="true">
-								<svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<path d="M4 15h22" stroke="#04396D" strokeWidth="2" strokeLinecap="round"/>
-									<path d="M8 10h14" stroke="#04396D" strokeWidth="2" strokeLinecap="round"/>
-									<path d="M10 20h10" stroke="#04396D" strokeWidth="2" strokeLinecap="round"/>
+								<svg width="28" height="21" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<path d="M5 20L11 14L15 18L25 8" stroke="#FFB806" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+									<path d="M20 8h5v5" stroke="#FFB806" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
 								</svg>
 							</span>
 							<span className="fee-chip fee-chip--blue">Live</span>
 						</header>
 						<h3 className="fee-card-title">FX Rate</h3>
-						<p className="fee-card-desc">Real-time market rates with minimal<br/>markup</p>
+						<p className="fee-card-desc">Real-time market rates with minimal<br />markup</p>
 						<ul className="fee-list">
 							<li className="fee-list-item">Mid-market rates</li>
 							<li className="fee-list-item">Real-time updates</li>
@@ -262,16 +261,16 @@ export default function Fees(){
 					<article className="fee-card reveal">
 						<header className="fee-card-header">
 							<span className="fee-card-icon" aria-hidden="true">
-								<svg width="34" height="30" viewBox="0 0 34 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<path d="M3 15h28" stroke="#04396D" strokeWidth="2" strokeLinecap="round"/>
-									<path d="M3 9h20" stroke="#04396D" strokeWidth="2" strokeLinecap="round"/>
-									<path d="M11 21h20" stroke="#04396D" strokeWidth="2" strokeLinecap="round"/>
+								<svg width="28" height="21" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<circle cx="15" cy="15" r="12" fill="#FFB806" />
+									<path d="M15 8L10 10v5c0 3 2.5 5.5 5 7.5 2.5-2 5-4.5 5-7.5v-5L15 8z" stroke="#04396D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+									<path d="M12 14l2 2 4-4" stroke="#04396D" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
 								</svg>
 							</span>
 							<span className="fee-chip fee-chip--amber">$2</span>
 						</header>
 						<h3 className="fee-card-title">Processing Fee</h3>
-						<p className="fee-card-desc">Fixed fee for secure transaction<br/>processing</p>
+						<p className="fee-card-desc">Fixed fee for secure transaction<br />processing</p>
 						<ul className="fee-list">
 							<li className="fee-list-item">Secure processing</li>
 							<li className="fee-list-item">Bank-grade security</li>
@@ -279,7 +278,7 @@ export default function Fees(){
 						</ul>
 					</article>
 				</div>
-				
+
 				<div className="fees-live reveal">
 					<header className="fees-live-header">
 						<h2 className="fees-live-title">Current Service & Transaction Fees</h2>
@@ -288,21 +287,21 @@ export default function Fees(){
 							<div className="fees-switch" role="tablist" aria-label="Fee Group Tabs">
 								<button
 									type="button"
-									className={`fees-switch-btn${feeTab==='Customer'?' active':''}`}
-									aria-selected={feeTab==='Customer'}
-									tabIndex={feeTab==='Customer' ? 0 : -1}
+									className={`fees-switch-btn${feeTab === 'Customer' ? ' active' : ''}`}
+									aria-selected={feeTab === 'Customer'}
+									tabIndex={feeTab === 'Customer' ? 0 : -1}
 									role="tab"
-									onClick={()=>setFeeTab('Customer')}
+									onClick={() => setFeeTab('Customer')}
 								>
 									Customer
 								</button>
 								<button
 									type="button"
-									className={`fees-switch-btn${feeTab==='Business'?' active':''}`}
-									aria-selected={feeTab==='Business'}
-									tabIndex={feeTab==='Business' ? 0 : -1}
+									className={`fees-switch-btn${feeTab === 'Business' ? ' active' : ''}`}
+									aria-selected={feeTab === 'Business'}
+									tabIndex={feeTab === 'Business' ? 0 : -1}
 									role="tab"
-									onClick={()=>setFeeTab('Business')}
+									onClick={() => setFeeTab('Business')}
 								>
 									Business
 								</button>
@@ -319,10 +318,10 @@ export default function Fees(){
 
 					{!loading && !error && data && (
 						<div className="fees-live-grid fees-live-styled">
-							{feeTab==='Customer' && (
+							{feeTab === 'Customer' && (
 								<section className="fees-section">
 									<h4 className="fees-section-title">Customer</h4>
-									{customerCategories.map(([category, rows])=> (
+									{customerCategories.map(([category, rows]) => (
 										<article key={category} className="fees-category fees-category-card">
 											<h5 className="fees-category-title">{category}</h5>
 											<Table items={rows} />
@@ -330,10 +329,10 @@ export default function Fees(){
 									))}
 								</section>
 							)}
-							{feeTab==='Business' && (
+							{feeTab === 'Business' && (
 								<section className="fees-section">
 									<h4 className="fees-section-title">Business</h4>
-									{businessCategories.map(([category, rows])=> (
+									{businessCategories.map(([category, rows]) => (
 										<article key={category} className="fees-category fees-category-card">
 											<h5 className="fees-category-title">{category}</h5>
 											<Table items={rows} />

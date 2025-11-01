@@ -12,8 +12,7 @@ export default function Hero(){
 							<span className="badge-icon" aria-hidden="true">
 								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 									<circle cx="12" cy="12" r="11.5" fill="#FFB806"/>
-									<circle cx="12" cy="17" r="1.5" fill="#FFB806"/>
-									<path d="M9.6 7.5C9.6 6.119 10.719 5 12.1 5s2.5 1.119 2.5 2.5S13.481 10 12.1 10 9.6 11.119 9.6 12.5V13" stroke="#04396D" strokeWidth="1.6" strokeLinecap="round"/>
+									<path d="M9 12l2 2 4-4" stroke="#04396D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
 								</svg>
 							</span>
 							<span className="badge-text">100% Transparent Pricing</span>
@@ -21,7 +20,7 @@ export default function Hero(){
 					</div>
 					<div className="hero-right">
 						<div className="hero-illustration">
-						<img src="/assets/img.png" alt="Fees illustration" className="hero-img" onError={(e)=>{ e.currentTarget.src='/assets/hero-placeholder.svg' }} />
+						<img src="/assets/wo.jpg" alt="Fees illustration" className="hero-img" onError={(e)=>{ e.currentTarget.src='/assets/hero-placeholder.svg' }} />
 						</div>
 					</div>
 				</div>

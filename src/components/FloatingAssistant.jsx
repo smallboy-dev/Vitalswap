@@ -226,6 +226,38 @@ export default function FloatingAssistant(){
             addAssistantMessage(reply); speak(reply);
             return;
         }
+        
+        // Intent detection: User wants to talk to a live agent
+        const agentKeywords = [
+            'agent', 'live agent', 'human agent', 'talk to agent', 'speak to agent', 'connect to agent',
+            'video help', 'video call', 'call agent', 'video support',
+            "don't understand", 'dont understand', 'need help', 'want help', 'help me', 'i need help',
+            'i dont understand', "i don't understand", 'confused', 'need assistance', 'human help',
+            'connect me', 'transfer me', 'speak to someone', 'talk to someone'
+        ];
+        const wantsAgent = agentKeywords.some(keyword => lower.includes(keyword));
+        
+        if(wantsAgent) {
+            const reply = TG.agentRedirect[lang] || TG.agentRedirect.english;
+            addAssistantMessage(reply);
+            speak(reply);
+            // Close the assistant panel after a short delay
+            setTimeout(() => {
+                setOpen(false);
+                // Try to find video-help section on current page first
+                const videoHelpEl = document.getElementById('video-help');
+                if(videoHelpEl) {
+                    // Scroll to the section if it exists
+                    videoHelpEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    // Otherwise, navigate to Video Help page via hash routing
+                    window.location.hash = '#/video-help';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }, 1500);
+            return;
+        }
+        
         addAssistantMessage(TG.fallback[lang] || TG.fallback.english);
         speak(TG.fallback[lang] || TG.fallback.english);
     },[input, addAssistantMessage, fetchLiveRates, fetchFees, feeModeAsk, pushRecent])
@@ -387,7 +419,10 @@ export default function FloatingAssistant(){
                     style={s.btn}
                     onClick={()=> setOpen(true)}
                 >
-                    <span aria-hidden="true" style={{fontSize:22}}>🧠</span>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{display:'block'}}>
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" fill="currentColor" opacity="0.9"/>
+                        <path d="M7 9h10M7 13h6" stroke="#04396D" strokeWidth="1.5" strokeLinecap="round"/>
+                    </svg>
                 </button>
             )}
 
@@ -460,11 +495,18 @@ const TG = {
     hausa: 'Don gayyatar mutum, kwafe swap tag ɗinka ko hanyar gayyata ka aika wa abokinka. Idan abokinka ya shiga da hanyar kuma yayi swap, ku duka zaku sami lada.'
   },
   fallback: {
-    english: "I can help with FX rates, fees, and referrals. Try asking: 'What’s the current dollar to naira rate?'",
+    english: "I can help with FX rates, fees, and referrals. Try asking: 'What's the current dollar to naira rate?'",
     pidgin: "I fit help with dollar rate, fee, or referral. Try ask: 'How much dollar dey?‘",
     yoruba: "Mo lè ràn ẹ́ lọ́wọ́ pẹ̀lú owó paṣipaarọ̀, àwọn owó iṣẹ́, tàbí ìtọ́ka. Béèrè bí owó ṣe ń lọ.",
     igbo: "M nwere ike inyere gị aka na ego mgbanwe, ụgwọ, na ntụpụta. Jụọ mụ: 'Kedu dollar na Naira ugbu a?‘",
     hausa: "Zan iya taimaka maka da farashin musaya, kudade, da gayyata. Tambayi; 'Yaya dala ke yanzu?'"
+  },
+  agentRedirect: {
+    english: "I understand you'd like to speak with a live agent. I'm connecting you to our Video Help section where you can start a video call with an agent. Redirecting now...",
+    pidgin: "I understand say you want talk to live agent. I dey connect you to Video Help section where you fit start video call with agent. I dey redirect you now...",
+    yoruba: "Mo yé pé o fẹ́ sọ̀rọ̀ pẹ̀lú agbẹ́nusọ́ ọ̀tún. Mo ń sọ̀rọ̀ sí apá ìrànlọ́wọ́ fídíò tí o lè bẹ̀rẹ̀ ìpè fídíò pẹ̀lú agbẹ́nusọ́. Mo ń ṣẹ̀wọ́n níbayìí...",
+    igbo: "Aghọtara m na ịchọrọ ịgwa onye ọrụ dị ndụ. Ana m eji gị na ngalaba Enyemaka Video ebe ị nwere ike ịmalite oku vidiyo na onye ọrụ. Ana m eweghachi gị ugbu a...",
+    hausa: "Na fahimci cewa kuna son yin magana da wakili na rayuwa. Ina haɗa ku zuwa sashen Taimako na Bidiyo inda za ku iya fara kiran bidiyo tare da wakili. Ina juya ku yanzu..."
   }
 }
 

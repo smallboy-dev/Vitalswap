@@ -1,26 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 export default function Onboarding(){
   const brand = { blue:'#04396D', yellow:'#FFB806', dark:'#0b274a' }
   const [open,setOpen] = useState(false)
   const [step,setStep] = useState(0)
   const [anchorRect,setAnchorRect] = useState(null)
-
-  useEffect(()=>{
-    const onKey = (e)=>{
-      if(!open) return
-      if(e.key==='Escape'){ close() }
-      if(e.key==='Enter'){ next() }
-      if(e.key==='ArrowRight'){ next() }
-      if(e.key==='ArrowLeft'){ back() }
-    }
-    window.addEventListener('keydown', onKey)
-    try{
-      const done = localStorage.getItem('onboarding_done')
-      if(!done){ setOpen(true) }
-    }catch(_e){}
-    return ()=> window.removeEventListener('keydown', onKey)
-  },[])
 
   const steps = useMemo(()=>[
     { title: 'Welcome to VitalSwap', body: 'Quick tour: view live rates, transparent fees, and get help via the floating assistant. You can dismiss anytime.', selector: null },
@@ -29,6 +13,47 @@ export default function Onboarding(){
     { title: 'Fees & Calculator', body: 'Scroll to see fees (Customer/Business) and try the calculator for real-time conversions and estimated charges.', selector: '#fees' },
     { title: 'Theme & Navigation', body: 'Use the header toggle for Dark/Light mode. Explore sections using the top navigation and smooth scrolling.', selector: '.theme-toggle' }
   ],[])
+
+  const close = useCallback(()=>{ 
+    try{ localStorage.setItem('onboarding_done','1') }catch(_e){}
+    setOpen(false) 
+  },[])
+  
+  const next = useCallback(()=>{ 
+    setStep(s => { 
+      if(s < steps.length-1) return s+1
+      else { 
+        setTimeout(()=>{ 
+          try{ localStorage.setItem('onboarding_done','1') }catch(_e){} 
+          setOpen(false) 
+        }, 0)
+        return s
+      }
+    })
+  },[steps.length])
+  
+  const back = useCallback(()=>{ 
+    setStep(s => s > 0 ? s-1 : s) 
+  },[])
+
+  useEffect(()=>{
+    try{
+      const done = localStorage.getItem('onboarding_done')
+      if(!done){ setOpen(true) }
+    }catch(_e){}
+  },[])
+
+  useEffect(()=>{
+    if(!open) return
+    const onKey = (e)=>{
+      if(e.key==='Escape'){ close() }
+      if(e.key==='Enter'){ next() }
+      if(e.key==='ArrowRight'){ next() }
+      if(e.key==='ArrowLeft'){ back() }
+    }
+    window.addEventListener('keydown', onKey)
+    return ()=> window.removeEventListener('keydown', onKey)
+  },[open, close, next, back])
 
   const selectEl = (sel)=>{
     if(!sel) return null
@@ -66,10 +91,6 @@ export default function Onboarding(){
   if(!open) return null
 
   const current = steps[step]
-
-  const close = ()=>{ try{ localStorage.setItem('onboarding_done','1') }catch(_e){}; setOpen(false) }
-  const next = ()=>{ if(step < steps.length-1) setStep(step+1); else close() }
-  const back = ()=>{ if(step > 0) setStep(step-1) }
 
   const vw = typeof window!=='undefined' ? window.innerWidth : 1024
   const vh = typeof window!=='undefined' ? window.innerHeight : 768

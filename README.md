@@ -90,9 +90,62 @@ All API endpoints are configured in your `.env` at the project root:
 ```env
 VITE_FEE_API=https://your-api.com/fee
 VITE_EXCHANGE_API=https://your-api.com/exchange
+
+# Video Help (Daily.co integration)
+VITE_DAILY_ROOM_URL=https://your-domain.daily.co/room-name
+VITE_AGENT_AVAILABLE=true
+VITE_VIDEO_RECORDING=false
+VITE_VIDEO_AGENT_CODE=your-secret-agent-code
 ```
 
 After changing `.env`, always restart the dev server.
+
+**Video Help Setup:**
+
+1. **Get a Daily.co Account:**
+   - Sign up at [https://daily.co](https://daily.co)
+   - Create a free account (or upgrade for more features)
+
+2. **Get Your Room URL (`VITE_DAILY_ROOM_URL`):**
+   - Go to your Daily.co dashboard
+   - Click "Create Room" or use an existing room
+   - Copy the room URL (format: `https://your-domain.daily.co/room-name`)
+   - Example: `https://vitalswap.daily.co/support`
+
+3. **Set Agent Availability (`VITE_AGENT_AVAILABLE`):**
+   - Set to `true` when agents are online and ready to take calls
+   - Set to `false` when agents are offline (users will see "Agents unavailable" message)
+   - You can update this in your `.env` file as needed
+
+4. **Enable Recording (`VITE_VIDEO_RECORDING`):**
+   - Set to `true` if you want to record video sessions (requires Daily.co Pro plan or higher)
+   - Set to `false` to disable recording
+   - When enabled, a recording banner will appear during calls
+   - Note: Recording must be enabled in your Daily.co room settings as well
+
+5. **Set Agent Code (`VITE_VIDEO_AGENT_CODE`):**
+   - ⚠️ **Important:** This is NOT from Daily.co - you create this yourself!
+   - This is a secret password/code that YOU choose
+   - Agents need this code to join as "support staff" instead of regular users
+   - Simply make up a secure password (e.g., `vitalswap-agent-2024` or `support123`)
+   - Write it in your `.env` file
+   - Only share this code with authorized VitalSwap team members who need agent access
+   - This is just a password you control - Daily.co doesn't provide it
+   - Example: `VITE_VIDEO_AGENT_CODE=vitalswap-secure-code-123`
+
+**Example `.env` configuration:**
+```env
+VITE_DAILY_ROOM_URL=https://vitalswap.daily.co/support
+VITE_AGENT_AVAILABLE=true
+VITE_VIDEO_RECORDING=false
+VITE_VIDEO_AGENT_CODE=vitalswap-secure-code-123
+```
+
+**Important Notes:**
+- After setting these values, restart your dev server (`npm run dev`)
+- The room URL must be accessible (not expired) - Daily.co free rooms may expire
+- For production, use a permanent room or implement dynamic room creation via API
+- Agent code should be kept secure and not committed to version control
 
 ---
 
@@ -122,6 +175,9 @@ root/
       FloatingAssistant.jsx  # Responsive floating chat with voice + multilingual
       Onboarding.jsx         # First-time guided tour with arrow + auto-scroll
       TipBubble.jsx          # Subtle, rotating AI tip bubbles (cooldowns)
+      VideoHelp.jsx          # Video call component (Daily Prebuilt) for user-agent connection
+    pages/
+      VideoHelpPage.jsx      # Dedicated page for Video Help with routing
     sections/
       Hero.jsx               # Hero illustration
       Fees.jsx               # Fee breakdown + live tables with toggle
